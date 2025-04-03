@@ -1,0 +1,102 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Weather App</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="toggleSettings()">
+        <ion-icon name="settings-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<!-- ion-menu -->
+<ion-menu side="end" menuId="settingsMenu" contentId="main-content">
+  <ion-header>
+    <ion-toolbar>
+      <ion-title>Customization Settings</ion-title>
+    </ion-toolbar>
+  </ion-header>
+  <ion-content>
+    <ion-list>
+      <ion-item>
+        <ion-label>Temperature Unit</ion-label>
+        <ion-select [(ngModel)]="temperatureUnit" (ionChange)="updateTemperatureUnit()">
+          <ion-select-option value="metric">Celsius</ion-select-option>
+          <ion-select-option value="imperial">Fahrenheit</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-label>Severe Weather Alerts</ion-label>
+        <ion-toggle [(ngModel)]="enableAlerts" (ionChange)="toggleAlerts()"></ion-toggle>
+      </ion-item>
+      <ion-item>
+        <ion-label>App Theme</ion-label>
+        <ion-select [(ngModel)]="appTheme" (ionChange)="updateTheme()">
+          <ion-select-option value="light">Light</ion-select-option>
+          <ion-select-option value="dark">Dark</ion-select-option>
+        </ion-select>
+      </ion-item>
+    </ion-list>
+  </ion-content>
+</ion-menu>
+
+<ion-content [fullscreen]="true" id="main-content">
+  <div id="container">
+    <div *ngIf="!isOnline" class="offline-banner">
+      <p>You are offline. Displaying cached data.</p>
+    </div>
+    <h1>Current Location Weather</h1>
+    <div *ngIf="currentWeather">
+      <h3>{{ currentWeather.name }}, {{ currentWeather.sys.country }}</h3>
+      <p>🌡️ Temp: {{ currentWeather.main.temp }}°{{ temperatureUnit === 'metric' ? 'C' : 'F' }}</p>
+      <p>🌥️ Condition: {{ currentWeather.weather[0].description }}</p>
+    </div>
+
+    <h2>Hourly Forecast (Today)</h2>
+    <ion-list *ngIf="currentForecast">
+      <ng-container *ngFor="let hour of currentForecast.list.slice(0, 8)">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>{{ hour.dt_txt | date:'shortTime' }}</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <p>🌡️ Temp: {{ hour.main.temp }}°{{ temperatureUnit === 'metric' ? 'C' : 'F' }}</p>
+            <p>🌥️ Condition: {{ hour.weather[0].description }}</p>
+          </ion-card-content>
+        </ion-card>
+      </ng-container>
+    </ion-list>
+
+    <h2>5-Day Forecast</h2>
+    <ion-list *ngIf="currentForecast">
+      <ng-container *ngFor="let day of currentForecast.list; let i = index">
+        <ion-card *ngIf="i % 8 === 0">
+          <ion-card-header>
+            <ion-card-title>{{ day.dt_txt | date:'mediumDate' }}</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <p>🌡️ Temp: {{ day.main.temp }}°{{ temperatureUnit === 'metric' ? 'C' : 'F' }}</p>
+            <p>🌥️ Condition: {{ day.weather[0].description }}</p>
+          </ion-card-content>
+        </ion-card>
+      </ng-container>
+    </ion-list>
+
+    <h2>Search for a Location</h2>
+    <ion-item>
+      <ion-input [(ngModel)]="searchQuery" placeholder="Enter city name"></ion-input>
+    </ion-item>
+    <ion-button expand="full" (click)="getWeatherForSearch()">Search</ion-button>
+
+    <div *ngIf="showModal" class="modal">
+      <div class="modal-content">
+        <div *ngIf="searchedWeather">
+          <h2>Weather in {{ searchedWeather.name }}</h2>
+          <p>🌡️ Temp: {{ searchedWeather.main.temp }}°{{ temperatureUnit === 'metric' ? 'C' : 'F' }}</p>
+          <p>🌥️ Condition: {{ searchedWeather.weather[0].description }}</p>
+        </div>
+        <button (click)="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</ion-content>
